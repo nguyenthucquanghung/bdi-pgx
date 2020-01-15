@@ -16,17 +16,18 @@ def random_distribution(item_prob):
 
 # get input
 df = pd.read_csv('sa_freq.csv')
-df['star_alleles'] = df[['allele_1', 'allele_2']].values.tolist()
-sa_freq = df[['star_alleles', 'prob']].values.tolist()
+df['sa_label'] = df[['allele_1', 'allele_2', 'label']].values.tolist()
+sa_freq = df[['sa_label', 'prob']].values.tolist()
 
 
 # simulate data
-gnomAD = '22_42126578-42130778.vcf'
+gnomAD = 'gnomAD_chr22_42125578_42132778_SNPs_Only.recode.vcf'
 adapter = {'A': 0, 'C': 1, 'T': 2, 'G': 3}
-first_pos = 42126578
-no_of_pos = 4201
+first_pos = 42125578
+no_of_pos = 7201
 no_of_samples = 120000
-data = [[[0] * no_of_pos] * 4] * no_of_samples  # init data
+data = [[[0] * no_of_pos] * 4] * no_of_samples
+label = []
 
 
 # assign gnomAD variants with allele frequencies into initialized data
@@ -52,9 +53,10 @@ for variant in VCF(gnomAD):
 
 # random distribute a pair of star alleles to samples
 for i in range(no_of_samples):
-    sa_pair = random_distribution(sa_freq)
-    sa_1 = 'CYP2D6/CYP2D6_{}.vcf'.format(sa_pair[0])
-    sa_2 = 'CYP2D6/CYP2D6_{}.vcf'.format(sa_pair[1])
+    sa_label = random_distribution(sa_freq)
+    label.append(sa_label[2])
+    sa_1 = 'CYP2D6/CYP2D6_{}.vcf'.format(sa_label[0])
+    sa_2 = 'CYP2D6/CYP2D6_{}.vcf'.format(sa_label[1])
     for variant in VCF(sa_1):
         if len(variant.ALT[0]) == 1:
             pos = variant.POS - first_pos
@@ -65,3 +67,4 @@ for i in range(no_of_samples):
 
 # save simulated data
 pickle.dump(data, open('simulated_data.pkl', 'wb'))
+pickle.dump(label, open('simulated_data_label.pkl', 'wb'))
